@@ -1,4 +1,21 @@
-gedit_autopep8
+GEdit_AutoPEP8
 ==============
 
-A GEdit plugin to auto format python code based on autopep8 python module
+GEdit-AutoPEP8 is a python plugin to use autopep8 inside GEdit 3.
+
+**Sources :** [GitHub](http://github.com/khertan/gedit_autopep8)  
+**Bugtracker :** [GitHub](http://github.com/khertan/gedit_autopep8/issues)
+
+Requirement
+-----------
+* AutoPEP8 must be installed
+
+Install
+-------
+Copy gedit_autopep8.py and gedit_autopep8.plugin in $HOME/.local/share/gedit/plugins. Then open the GEdit plugin manager to activate AutoPEP8 plugin.
+
+Licence
+-------
+
+GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007
+

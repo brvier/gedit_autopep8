@@ -1,0 +1,9 @@
+[Plugin]
+Loader=python
+Module=gedit_autopep8
+IAge=3
+Name=AutoPEP8
+Description=AutoPEP8 for GEdit
+Authors=Benoît HERVIER <khertan@khertan.net>
+Copyright=Copyright © 2013 Benoît HERVIER <khertan@khertan.net>
+Website=http://www.khertan.net/pages/gedit-autopep8.html
