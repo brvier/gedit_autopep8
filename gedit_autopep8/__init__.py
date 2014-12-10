@@ -1,33 +1,39 @@
+#!/usr/bin/env python
+#-*- coding:utf-8 -*-
+
 from gettext import gettext as _
 
 try:
-    from gi.repository import GObject, Gtk, Gedit
-except ImportError, err:
-    print 'GEdit-AutoPEP8 need to be launched by GEdit 3'
-    print err
+    from gi.repository import GObject, Gio, Gtk, Gdk, Gedit
+except ImportError as err:
+    print('GEdit-AutoPEP8 need to be launched by GEdit 3')
+    print(err)
 
 try:
     import autopep8
-except ImportError, err:
-    print ('GEdit-AutoPEP8 require autopep8 python module'
-           ' from https://github.com/hhatto/autopep8')
-    print err
+except ImportError as err:
+    print('GEdit-AutoPEP8 require autopep8 python module'
+          ' from https://github.com/hhatto/autopep8')
+    print(err)
 
-# Menu item example, insert a new item in the Tools menu_
-ui_str = """<ui>
-  <menubar name="MenuBar">
-    <menu name="ToolsMenu" action="Tools">
-      <placeholder name="ToolsOps_2">
-        <menuitem name="Auto PEP8" action="AutoPEP8" />
-      </placeholder>
-    </menu>
-  </menubar>
-</ui>
-"""
+
+class AutoPEP8AppActivatable(GObject.Object, Gedit.AppActivatable):
+
+    app = GObject.property(type=Gedit.App)
+
+    def __init__(self):
+        GObject.Object.__init__(self)
+
+    def do_activate(self):
+        self.menu_ext = self.extend_menu("tools-section")
+        item = Gio.MenuItem.new(_("PEP8 Auto format..."), "win.autopep8")
+        self.menu_ext.prepend_menu_item(item)
+
+    def do_deactivate(self):
+        self.menu_ext = None
 
 
 class AutoPEP8WindowActivatable(GObject.Object, Gedit.WindowActivatable):
-    __gtype_name__ = "AutoPEP8WindowActivatable"
 
     window = GObject.property(type=Gedit.Window)
 
@@ -35,46 +41,20 @@ class AutoPEP8WindowActivatable(GObject.Object, Gedit.WindowActivatable):
         GObject.Object.__init__(self)
 
     def do_activate(self):
-        # Insert menu items
-        self._insert_menu()
+        # Install Menu Action
+        action = Gio.SimpleAction(name="autopep8")
+        action.connect('activate', lambda a, p: self.on_autopep8_activate())
+        self.window.add_action(action)
+        self._update()
 
     def do_deactivate(self):
-        # Remove any installed menu items
-        self._remove_menu()
-
-        self._action_group = None
-
-    def _insert_menu(self):
-        # Get the Gtk.UIManager
-        manager = self.window.get_ui_manager()
-
-        # Create a new action group
-        self._action_group = Gtk.ActionGroup("AutoPEP8PluginActions")
-        self._action_group.add_actions([("AutoPEP8", None, _("Auto PEP8"),
-                                         '<Control><Shift>R',
-                                         _("Reformat with Auto PEP8"),
-                                         self.on_autopep8_activate)])
-
-        # Insert the action group
-        manager.insert_action_group(self._action_group, -1)
-
-        # Merge the UI
-        self._ui_id = manager.add_ui_from_string(ui_str)
-
-    def _remove_menu(self):
-        # Get the Gtk.UIManager
-        manager = self.window.get_ui_manager()
-
-        # Remove the ui
-        manager.remove_ui(self._ui_id)
-
-        # Remove the action group
-        manager.remove_action_group(self._action_group)
-
-        # Make sure the manager updates
-        manager.ensure_update()
+        # Remove installed menu items
+        self.window.remove_action("autopep8")
 
     def do_update_state(self):
+        self._update()
+
+    def _update(self):
         active = False
         try:
             if self.window.get_active_document() \
@@ -83,21 +63,26 @@ class AutoPEP8WindowActivatable(GObject.Object, Gedit.WindowActivatable):
         except AttributeError:
             pass
 
-        self._action_group.set_sensitive(active)
+        if active:
+            active = self.window.get_active_tab() is not None
+
+        self.window.lookup_action("autopep8").set_enabled(active)
 
     # Menu activate handlers
-    def on_autopep8_activate(self, action):
+    def on_autopep8_activate(self):
         doc = self.window.get_active_document()
         if not doc:
             return
 
         try:
-            encoding = self.document.get_encoding().get_charset()
-        except Exception:
+            encoding = doc.get_encoding().get_charset()
+        except Exception as err:
             encoding = 'utf-8'
+            print('Encoding err', err)
 
         start, end = doc.get_bounds()
-        doc.set_text(autopep8.fix_string(unicode(
+        doc.set_text(autopep8.fix_code(
             doc.get_text(start, end,
-                         include_hidden_chars=True), encoding)))
+                         include_hidden_chars=True).encode(encoding),
+            encoding=encoding))
 
