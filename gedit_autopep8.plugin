@@ -7,4 +7,4 @@ Description=AutoPEP8 for GEdit
 Authors=Benoît HERVIER <khertan@khertan.net>
 Copyright=Copyright © 2013-2014 Benoît HERVIER <khertan@khertan.net>
 Website=http://www.khertan.net/pages/gedit-autopep8.html
-Version=@VERSION@
+Version=0.2.0
